@@ -5,6 +5,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
 public class HTMLextractor {
 	
 	private Set<String> images;
+	private Map<String,String> medias;
 	private Set<String> emails;
 	private Set<String> phones;
 	private Set<String> Links;
@@ -24,6 +26,7 @@ public class HTMLextractor {
 	// This is the constructor method for loading the page
 	public static HTMLextractor source(String url)
 	{	
+		System.out.println(url.split("^.+?[^\\/:](?=[?\\/]|$)")[0].toString());
 		try 
 		{
 			htmlpage = Jsoup.connect(url).get();
@@ -42,14 +45,13 @@ public class HTMLextractor {
     public Set<String> getimages() 
     {
        this.images = new HashSet<String>();
-       Elements imgs = htmlpage.select("[src]");
-       
-		Pattern imgPattern = Pattern.compile("(.*/)*.+\\.(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP)$");
+       Pattern imgPattern = Pattern.compile("(.*/)*.+\\.(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP)$");
        int i = 0;
+       Elements imgs = htmlpage.select("[src]");
        for (Element img : imgs) 
        {   
-    	   		if(imgPattern.matcher(img.attr("abs:src")).find())
-    	   			this.images.add(img.attr("abs:src"));
+    	   	if(imgPattern.matcher(img.attr("abs:src")).find())
+    	   	this.images.add(img.attr("abs:src"));
        }
 		return images;
 	}
@@ -68,16 +70,32 @@ public class HTMLextractor {
 		return emails;
 	}
 
+		// getting phone numbers via a regex
 	public Set<String> getPhones() 
 	{
 		this.phones = new HashSet<String>();
+		Pattern phonePattern = Pattern.compile("(\\d[.-])?\\(?\\d{3}\\)?[-. ]?\\d{3}[-. ]?\\d{4}\\b");
+        Matcher matcher = phonePattern.matcher(htmlpage.text());
+        System.out.println(matcher.find());
+        while (matcher.find()) 
+        {
+            phones.add(matcher.group());
+        }
+		
 		return phones;
 	}
+	// getting href links 
 	public Set<String> getLinks() 
 	{
 		this.Links = new HashSet<String>();
+		Elements lnks = htmlpage.select("a[href]");
+		 for (Element link : lnks) 
+		 {
+			 this.Links.add(link.attr("abs:href"));
+		 }
 		return Links;
 	}
+	//getting social media links
 	public Set<String> getSocialLinks() 
 	{
 		this.SocialLinks = new HashSet<String>();
@@ -87,7 +105,7 @@ public class HTMLextractor {
 
 	public static void main(String[] args) 
 	{       
-       System.out.println(HTMLextractor.source("https://www.zaubacorp.com/company/DELTA-SOFT-SOLUTIONS-INDIA-PRIVATE-LIMITED/U72200TG2007PTC055389").getimages().size());
+       System.out.println(HTMLextractor.source("https://www.ssa.gov/agency/contact/phone.html").getPhones().toString());
     }
 
    
