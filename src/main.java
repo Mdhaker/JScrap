@@ -5,7 +5,7 @@ public class main {
 	{ 
 		String url = "http://www.solaraccreditation.com.au/products/inverters/approved-inverters.html";
 			
-		System.out.println(Scraper.source(url).getTables().iterator().next().getValueAt(5, 5));
+		System.out.println(Scraper.source(url).getTables().iterator().next().getValueAt(0, 1));
 		
 		
     }

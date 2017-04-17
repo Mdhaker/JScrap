@@ -53,6 +53,15 @@ public class Table extends AbstractTableModel
 		}
 		return tableFoot;
 	}
+	
+	public Element getTable() {
+		return table;
+	}
+
+	public void setTable(Element table) {
+		this.table = table;
+	}
+
 	@Override
 	public int getRowCount()
 	{
@@ -68,6 +77,8 @@ public class Table extends AbstractTableModel
 	@Override
 	public String getValueAt(int rowIndex, int columnIndex) 
 	{
+		if(this.hasHead&&rowIndex==0)
+			return this.table.select("tr").get(rowIndex).select("th").get(columnIndex).text();
 		return this.table.select("tr").get(rowIndex).select("td").get(columnIndex).text();
 	}
 
