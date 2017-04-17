@@ -3,12 +3,10 @@ public class main {
 
 	public static void main(String[] args) 
 	{ 
-		String url = "https://transtats.bts.gov/DataIndex.asp";
+		String url = "http://www.solaraccreditation.com.au/products/inverters/approved-inverters.html";
 			
-		Scraper.getInstance().addImagesExt("png");
-		Scraper.getInstance().addImagesExt("gif");
-		Scraper.getInstance().addDocumentExt("js");
-		System.out.println(Scraper.source(url).getMedias());
+		System.out.println(Scraper.source(url).getTables().iterator().next().getValueAt(5, 5));
+		
 		
     }
 

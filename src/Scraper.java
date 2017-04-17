@@ -35,7 +35,7 @@ public class Scraper {
 	{
 		return instance ;
 	}
-	public Scraper()
+	private Scraper()
 	{
 		this.videoExt = new Vector<String>();
 		this.videoExt.add("mpeg");this.videoExt.add("ogg");this.videoExt.add("flv");this.videoExt.add("mp4");
@@ -55,6 +55,7 @@ public class Scraper {
 		}
 		catch (Exception e) 
 		{	System.out.println(e.getMessage());
+			e.printStackTrace();
 			return instance ;
 		}
 	}
@@ -64,7 +65,7 @@ public class Scraper {
 	 * 
 	 * @deprecated  we use get media to get all type of media including images </br>
 	 *              
-	 *              use {@link #getMedia()} instead like this: 
+	 * use {@link #getMedia()} instead like this: 
 	 * 
 	 * <blockquote>
 	 * <pre>
@@ -259,6 +260,19 @@ public class Scraper {
 				this.externalLinks.add(link);
 			}
 		}
+	}
+	// get HTML table
+	
+	public Set<Table> getTables()
+	{
+		HashSet<Table> tables = new HashSet<Table>();
+		Elements tableElements = htmlpage.select("table");
+		
+		for(Element tab : tableElements)
+		{
+			tables.add(Table.parse(tab));
+		}
+		return tables ;
 	}
 	
 	// Recursion calls for the hole site
