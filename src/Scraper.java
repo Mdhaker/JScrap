@@ -2,7 +2,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +28,7 @@ public class Scraper {
 	private Vector<String> audioExt ;
 	private Vector<String> imagesExt ;
 	private Vector<String> documentExt ;
+	private Vector<String> iframes ;
 	private static Scraper instance = new Scraper();
 	
 	public static Scraper getInstance()
@@ -42,6 +42,7 @@ public class Scraper {
 		this.imagesExt = new Vector<String>();
 		this.documentExt = new Vector<String>();
 		this.audioExt = new Vector<String>();
+		this.iframes = new Vector<String>();
 	}
 	// This is the constructor method for loading the page
 	public static Scraper source(String url)
@@ -51,6 +52,8 @@ public class Scraper {
 		try 
 		{
 			htmlpage = Jsoup.connect(url).get();
+			if(!htmlpage.select("iframe").isEmpty())
+				instance.iframes.addElement(htmlpage.select("iframe").iterator().next().attr("src"));
 			return instance;			
 		}
 		catch (Exception e) 
@@ -61,8 +64,6 @@ public class Scraper {
 	}
 	// Fetching all images in the page
 	/**
-	 * @param baseprice
-	 * 
 	 * @deprecated  we use get media to get all type of media including images </br>
 	 *              
 	 * use {@link #getMedia()} instead like this: 
@@ -99,13 +100,19 @@ public class Scraper {
         {
             emails.add(matcher.group());
         }
-		return emails;
+        if(this.iframes.isEmpty())
+        	return emails;
+        else
+        {        	
+        	emails.addAll(Scraper.source(this.iframes.iterator().next()).getEmails());
+        	return emails ;
+        }
 	}
 		// getting phone numbers via a regex
 	public Set<String> getPhones() 
 	{
 		this.phones = new HashSet<String>();
-		Pattern phonePattern = Pattern.compile("(\\d[.-])?\\(?\\d{3}\\)?[-. ]?\\d{3}[-. ]?\\d{4}\\b");
+		Pattern phonePattern = Pattern.compile("(\\d[.-])?\\(?\\d{3}\\)?(\\s)*[-.( ]?\\d{3}[-.) ]?(\\s)*\\d{4}\\b");
         Matcher phoneMatcher = phonePattern.matcher(htmlpage.text());
         System.out.println(phoneMatcher.find());
         while (phoneMatcher.find()) 
@@ -113,7 +120,13 @@ public class Scraper {
             phones.add(phoneMatcher.group());
         }
 		
-		return phones;
+        if(this.iframes.isEmpty())
+        	return phones;
+        else
+        {        	
+        	phones.addAll(Scraper.source(this.iframes.iterator().next()).getPhones());
+        	return phones ;
+        }
 	}
 	// getting href links 
 	public Set<String> getLinks() 
@@ -125,7 +138,8 @@ public class Scraper {
 			 this.Links.add(link.attr("abs:href"));
 		 }
 		 this.fetchLinks();
-		return Links;
+		
+	        	return Links;
 	}
 	/**
 	 * @return array of links wanted
@@ -134,7 +148,7 @@ public class Scraper {
 	public Set<String> getSocialLinks(String socialmedia) 
 	{
 		this.SocialLinks = new HashSet<String>();
-		Pattern socialPattern =Pattern.compile("http(s)?:\\/\\/(www\\.)?(facebook|fb)\\.com\\/(A-z 0-9 _ - \\.)\\/?"); 
+		Pattern socialPattern =Pattern.compile("http(s)?:\\/\\/(www\\.)?("+socialmedia+")\\.com\\/(A-z 0-9 _ - \\.)\\/?"); 
 		Matcher socialMatcher = socialPattern.matcher(htmlpage.text());
 		System.out.print("is there any "+socialmedia+" links found in this page :" +socialMatcher.find());
 		while(socialMatcher.find())
@@ -158,7 +172,24 @@ public class Scraper {
 			this.getLinks();
 		return internalLinks;
 	}
-	// get media by ext type	
+	// get file by ext type
+	
+	public Set<String> getFiles(String ext)
+	{
+		HashSet<String> fetchedFiles = new HashSet<String>();
+		Elements files = htmlpage.select("[src]");
+		for (Element file : files) 
+	    {
+	    	Matcher m = Pattern.compile("[^/.]*\\.(\\w+)[^/]*$").matcher(file.attr("abs:src"));
+	    	System.out.println(file.attr("abs:src"));
+	    	if(m.find()&&m.group(1).equals(ext))
+	    	{
+	    		fetchedFiles.add(file.attr("abs:src"));		
+	    	}
+				
+	 	}
+		return fetchedFiles;
+	}
 	/**
 	 * Exctract all media types by their type
 	 * @param ext Media extension to extract.
@@ -209,7 +240,7 @@ public class Scraper {
 		return this.medias;
 	}
 	
-	public Vector<String> getVideoExt() 
+	private Vector<String> getVideoExt() 
 	{
 		return videoExt;
 	}
@@ -217,7 +248,7 @@ public class Scraper {
 	{
 		this.videoExt.add(videoExt);
 	}
-	public Vector<String> getImagesExt() 
+	private Vector<String> getImagesExt() 
 	{
 		return imagesExt;
 	}
@@ -225,7 +256,7 @@ public class Scraper {
 	{
 		this.imagesExt.add(imagesExt);
 	}
-	public Vector<String> getDocumentExt() 
+	private Vector<String> getDocumentExt() 
 	{
 		return documentExt;
 	}
@@ -234,13 +265,15 @@ public class Scraper {
 		this.documentExt.add(documentExt);
 	}
 	
-	public Vector<String> getAudioExt() {
+	private Vector<String> getAudioExt() {
 		return audioExt;
 	}
 	public void addAudioExt(String audioExt) 
 	{
 		this.audioExt.add(audioExt);
 	}
+	
+	
 	// Fetching internal and external links by the base url and redirect words...
 	private void fetchLinks()
 	{
@@ -279,6 +312,7 @@ public class Scraper {
 	
 	public void getAllEmails(Set<String> links)
 	{
+		
 	}
 
 

@@ -3,9 +3,11 @@ public class main {
 
 	public static void main(String[] args) 
 	{ 
-		String url = "http://www.solaraccreditation.com.au/products/inverters/approved-inverters.html";
-			
-		System.out.println(Scraper.source(url).getTables().iterator().next().getValueAt(0, 1));
+		String url = "https://www.randomlists.com/phone-numbers";
+		
+		
+		//System.out.println(Scraper.source(url).getPhones().toString());
+		System.out.print(Search.source(url).find("phone"));
 		
 		
     }
