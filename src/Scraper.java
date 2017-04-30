@@ -1,3 +1,4 @@
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,7 +12,11 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+/**
+ * 
+ * @author MDA
+ *
+ */
 public class Scraper {
 	
 	private Set<String> images;
@@ -29,12 +34,9 @@ public class Scraper {
 	private Vector<String> imagesExt ;
 	private Vector<String> documentExt ;
 	private Vector<String> iframes ;
-	private static Scraper instance = new Scraper();
+	private static Scraper instance;
+	private String rootURL;
 	
-	public static Scraper getInstance()
-	{
-		return instance ;
-	}
 	private Scraper()
 	{
 		this.videoExt = new Vector<String>();
@@ -46,20 +48,24 @@ public class Scraper {
 	}
 	// This is the constructor method for loading the page
 	public static Scraper source(String url)
-	{	
-		baseURL = url.split("://")[1].split(":")[0].split("/")[0];
-		System.out.println("base url : "+baseURL);
+	{	instance = new Scraper();
+		instance.rootURL = url;
 		try 
 		{
+			baseURL = "http://"+url.split("://")[1].split("/")[0];
 			htmlpage = Jsoup.connect(url).get();
 			if(!htmlpage.select("iframe").isEmpty())
 				instance.iframes.addElement(htmlpage.select("iframe").iterator().next().attr("src"));
 			return instance;			
 		}
-		catch (Exception e) 
-		{	System.out.println(e.getMessage());
-			e.printStackTrace();
+		catch (ArrayIndexOutOfBoundsException e)
+		{
+			baseURL = "http://"+url+"/";
 			return instance ;
+		}
+		catch (Exception e) 
+		{	System.out.println("Error ====> " + e.getMessage());
+				return instance ;
 		}
 	}
 	// Fetching all images in the page
@@ -100,13 +106,8 @@ public class Scraper {
         {
             emails.add(matcher.group());
         }
-        if(this.iframes.isEmpty())
-        	return emails;
-        else
-        {        	
-        	emails.addAll(Scraper.source(this.iframes.iterator().next()).getEmails());
         	return emails ;
-        }
+        
 	}
 		// getting phone numbers via a regex
 	public Set<String> getPhones() 
@@ -135,10 +136,15 @@ public class Scraper {
 		Elements lnks = htmlpage.select("a[href]");
 		 for (Element link : lnks) 
 		 {
-			 this.Links.add(link.attr("abs:href"));
+			 String href=link.attr("abs:href");
+			 if(!this.hasFileExtension(href))
+			 {
+				 if(href.endsWith("#"))
+						 href = href.substring(0, href.length()-1);
+				 this.Links.add(href);
+			 }
 		 }
 		 this.fetchLinks();
-		
 	        	return Links;
 	}
 	/**
@@ -272,8 +278,7 @@ public class Scraper {
 	{
 		this.audioExt.add(audioExt);
 	}
-	
-	
+		
 	// Fetching internal and external links by the base url and redirect words...
 	private void fetchLinks()
 	{
@@ -281,10 +286,10 @@ public class Scraper {
 		this.internalLinks = new HashSet<String>();
 		for(String link : this.Links)
 		{
-			if(link.contains(baseURL)
+			if((link.contains(baseURL)||link.startsWith("/"))
 					&&!link.contains("URL=")
 					&&!link.contains("redirect")
-					&&!link.split("://")[1].split(":")[0].split("/")[1].contains("http"))
+					&&!link.split("://")[1].split(":")[0].contains("http"))
 			{
 				this.internalLinks.add(link);
 			}
@@ -309,13 +314,19 @@ public class Scraper {
 	}
 	
 	// Recursion calls for the hole site
-	
-	public void getAllEmails(Set<String> links)
+	public Crawl startCrawl()
 	{
-		
+		return Crawl.build(baseURL);
 	}
-
-
+	
+	public String getRootURL()
+	{
+		return this.rootURL;
+	}
+	private boolean hasFileExtension(String s) 
+	{
+	    return s.matches("^[\\w\\d\\:\\/\\.]+\\.\\w{3,4}(\\?[\\w\\W]*)?$");
+	}
 	
 
    

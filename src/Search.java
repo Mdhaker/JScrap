@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,12 +8,17 @@ import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-
+/**
+ * 
+ * @author MDA
+ *
+ */
 public class Search {
 	
 	private static Search instance = new Search();
 	
 	private static Document sourceDoc ;
+	private Set<Element> matchedTags = new HashSet<Element>();
 	public static Search source(String url)
 	{
 		try 
@@ -34,30 +40,41 @@ public class Search {
 			return true;
 		return false;
 	}
+	/**
+	 * Find the tag with matched keyword and return its text
+	 * @param keyword
+	 * @return Set of text block in which the keywork existe
+	 */
 	public Set<String> find(String keyword)
 	{
 		Set<String> results = new HashSet<String>();
-		results.add(this.deepSearch(sourceDoc.select("html").first(),keyword).iterator().next().text());
+		Iterator<Element> elementIterator = this.deepSearch(sourceDoc.select("html").first(),keyword).iterator();
+		while(elementIterator.hasNext())
+		{
+			results.add(elementIterator.next().text());
+			
+		}
 		return results;
 	}
-	private Set<Element> matchedTags = new HashSet<Element>();
+	/**
+	 * Search keyword in a specific node
+	 * @param node root node to search in
+	 * @param keyword search keyword
+	 * @return Set of node elements to fetch
+	 */
 	public Set<Element> deepSearch(Element node,String keyword)
 	{
-		Pattern  searchKeyPattern= Pattern.compile(keyword);		
-		System.out.println("Node name = " + node.tagName()+" || Node children = " + node.children().size());
+		Pattern  searchKeyPattern= Pattern.compile(keyword,Pattern.CASE_INSENSITIVE);		
 		if(searchKeyPattern.matcher(node.ownText()).find())
 		{
 			matchedTags.add(node);
-			System.out.println("matched");
 		}
 		if(node.childNodeSize()==0)
 		{
-			System.out.println("No children found");
 			return matchedTags;
 		}
 		else
 		{
-			System.out.println("else the recursive nested call");
 			for(int i=0; i<node.children().size();i++)
 				deepSearch(node.child(i),keyword);
 			return matchedTags;

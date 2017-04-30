@@ -3,11 +3,11 @@ public class main {
 
 	public static void main(String[] args) 
 	{ 
-		String url = "https://www.randomlists.com/phone-numbers";
+		String url = "http://www.deltagroup.com.tn/contactez-nous/";
 		
-		
-		//System.out.println(Scraper.source(url).getPhones().toString());
-		System.out.print(Search.source(url).find("phone"));
+		//System.out.println(Scraper.source(url).startCrawl());
+		//System.out.println(Scraper.source(url).startCrawl().getEmails());
+		System.out.println(Search.source(url).find("Coordonnées"));
 		
 		
     }
