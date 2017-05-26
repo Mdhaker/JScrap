@@ -1,8 +1,15 @@
+package scrappers;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import utils.Download;
+import utils.ExcelWrite;
+import utils.Filter;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,17 +43,25 @@ public class Scraper {
 	private Vector<String> iframes ;
 	private static Scraper instance;
 	private String rootURL;
+	private String[] mediaFilterKeys;
 	
 	private Scraper()
 	{
 		this.videoExt = new Vector<String>();
-		this.videoExt.add("mpeg");this.videoExt.add("ogg");this.videoExt.add("flv");this.videoExt.add("mp4");
+		this.addVideoExt("mpeg","mp4","flv","swf","avi");
 		this.imagesExt = new Vector<String>();
+		this.addImageExt("png","jpg","jpeg","tiff","gif");
 		this.documentExt = new Vector<String>();
+		this.addDocumentExt("docx","pdf","txt");
 		this.audioExt = new Vector<String>();
+		this.addAudioExt("mp3","ogg");
 		this.iframes = new Vector<String>();
 	}
-	// This is the constructor method for loading the page
+	/**
+	 * builder with a target url
+	 * @param url
+	 * @return
+	 */
 	public static Scraper source(String url)
 	{	instance = new Scraper();
 		instance.rootURL = url;
@@ -65,10 +80,38 @@ public class Scraper {
 		}
 		catch (Exception e) 
 		{	System.out.println("Error ====> " + e.getMessage());
-				return instance ;
+		return instance ;
 		}
 	}
-	// Fetching all images in the page
+	public static Scraper sourceHTML(String html)
+	{
+		instance = new Scraper();
+		htmlpage = Jsoup.parse(html) ;
+		return instance ;
+	}
+	
+	/**
+	 * save scraping result
+	 * @param url
+	 * @return
+	 */
+	public Scraper saveToexcel(ExcelWrite writer)
+	{	
+		writer.saveScrapingResult(this);
+		return this;
+	}
+	
+	/**
+	 * save search key result
+	 * @param url
+	 * @return
+	 */
+	public Scraper saveToexcel(ExcelWrite writer,String key)
+	{	
+		writer.saveSearchResult(this.rootURL, key);
+		return this;
+	}
+	
 	/**
 	 * @deprecated  we use get media to get all type of media including images </br>
 	 *              
@@ -113,7 +156,7 @@ public class Scraper {
 	public Set<String> getPhones() 
 	{
 		this.phones = new HashSet<String>();
-		Pattern phonePattern = Pattern.compile("(\\d[.-])?\\(?\\d{3}\\)?(\\s)*[-.( ]?\\d{3}[-.) ]?(\\s)*\\d{4}\\b");
+		Pattern phonePattern = Pattern.compile("^((((\\(\\d{3}\\))|(\\d{3}-))\\d{3}-\\d{4})|(\\+?\\d{2}((-| )\\d{1,8}){1,5}))(( x| ext)\\d{1,5}){0,1}$");
         Matcher phoneMatcher = phonePattern.matcher(htmlpage.text());
         System.out.println(phoneMatcher.find());
         while (phoneMatcher.find()) 
@@ -125,7 +168,7 @@ public class Scraper {
         	return phones;
         else
         {        	
-        	phones.addAll(Scraper.source(this.iframes.iterator().next()).getPhones());
+        	phones.addAll(Scraper.source(this.iframes.iterator().next()).getPhones());        	
         	return phones ;
         }
 	}
@@ -137,12 +180,11 @@ public class Scraper {
 		 for (Element link : lnks) 
 		 {
 			 String href=link.attr("abs:href");
-			 if(!this.hasFileExtension(href))
-			 {
+			
 				 if(href.endsWith("#"))
 						 href = href.substring(0, href.length()-1);
 				 this.Links.add(href);
-			 }
+			 
 		 }
 		 this.fetchLinks();
 	        	return Links;
@@ -151,19 +193,28 @@ public class Scraper {
 	 * @return array of links wanted
 	 */
 	//getting social media links
-	public Set<String> getSocialLinks(String socialmedia) 
+	private Set<String> getSocialLinks(String socialmedia) 
 	{
 		this.SocialLinks = new HashSet<String>();
-		Pattern socialPattern =Pattern.compile("http(s)?:\\/\\/(www\\.)?("+socialmedia+")\\.com\\/(A-z 0-9 _ - \\.)\\/?"); 
-		Matcher socialMatcher = socialPattern.matcher(htmlpage.text());
-		System.out.print("is there any "+socialmedia+" links found in this page :" +socialMatcher.find());
-		while(socialMatcher.find())
+		for(String link :this.getLinks())
 		{
-			this.SocialLinks.add(socialMatcher.group());
+			if (link.contains(socialmedia))
+				this.SocialLinks.add(link);
 		}
 		return SocialLinks;
 	}
 	
+	public Set<String> getSocialMediaLinks()
+	{
+		Set<String> socialLinks = new HashSet<String>();
+		socialLinks.addAll(this.getSocialLinks("facebook"));
+		socialLinks.addAll(this.getSocialLinks("twitter"));
+		socialLinks.addAll(this.getSocialLinks("fb"));
+		socialLinks.addAll(this.getSocialLinks("linkedin"));
+		socialLinks.addAll(this.getSocialLinks("instagram"));
+		socialLinks.addAll(this.getSocialLinks("pintrest"));
+		return socialLinks;
+	}
 	public Set<String> getExternalLinks() 
 	{
 		if(this.Links == null)
@@ -220,22 +271,22 @@ public class Scraper {
 	    	}
 				if(this.imagesExt.contains(ext))
 				{
-					imageMedia.add(meds.attr("abs:src"));
+					imageMedia.add(meds.attr("abs:src").split("\\?")[0]);
 				}
 				else if(this.documentExt.contains(ext))
 				{
-					documentMedia.add(meds.attr("abs:src"));
+					documentMedia.add(meds.attr("abs:src").split("\\?")[0]);
 				}
 				else if (this.videoExt.contains(ext))
 				{
-					videoMedia.add(meds.attr("abs:src"));
+					videoMedia.add(meds.attr("abs:src").split("\\?")[0]);
 				}
 				else if (this.audioExt.contains(ext))
 				{
-					audioMedia.add(meds.attr("abs:src"));
+					audioMedia.add(meds.attr("abs:src").split("\\?")[0]);
 				}
 				else
-					unknownMedia.add(meds.attr("abs:src"));
+					unknownMedia.add(meds.attr("abs:src").split("\\?")[0]);
 	 	   
 				this.medias.put("image", imageMedia);
 				this.medias.put("video", videoMedia);
@@ -250,33 +301,37 @@ public class Scraper {
 	{
 		return videoExt;
 	}
-	public void addVideoExt(String videoExt) 
+	public void addVideoExt(String... videosExt) 
 	{
-		this.videoExt.add(videoExt);
+		for(String ext:videosExt)
+			this.videoExt.add(ext);
 	}
 	private Vector<String> getImagesExt() 
 	{
 		return imagesExt;
 	}
-	public void addImagesExt(String imagesExt) 
+	public void addImageExt(String... imagesExt) 
 	{
-		this.imagesExt.add(imagesExt);
+		for(String ext:imagesExt)
+		this.imagesExt.add(ext);
 	}
 	private Vector<String> getDocumentExt() 
 	{
 		return documentExt;
 	}
-	public void addDocumentExt(String documentExt) 
+	public void addDocumentExt(String... documentsExt) 
 	{
-		this.documentExt.add(documentExt);
+		for(String ext:documentsExt)
+			this.documentExt.add(ext);
 	}
 	
 	private Vector<String> getAudioExt() {
 		return audioExt;
 	}
-	public void addAudioExt(String audioExt) 
+	public void addAudioExt(String... audiosExt) 
 	{
-		this.audioExt.add(audioExt);
+		for(String ext:audiosExt)
+			this.audioExt.add(ext);
 	}
 		
 	// Fetching internal and external links by the base url and redirect words...
@@ -312,22 +367,62 @@ public class Scraper {
 		}
 		return tables ;
 	}
-	
-	// Recursion calls for the hole site
-	public Crawl startCrawl()
-	{
-		return Crawl.build(baseURL);
-	}
-	
+
 	public String getRootURL()
 	{
 		return this.rootURL;
 	}
+	
+	/**
+	 * save scraped to excel file xls or xlsx
+	 * @param write
+	 * @return
+	 */
+	public Scraper withExcelSave(ExcelWrite write)
+	{
+		write.saveScrapingResult(this);
+		return this ;
+	}
+	
+	/**
+	 * filter files with key tags
+	 * @param strings
+	 * @return
+	 */
+	public Scraper withMediaFilter(String...strings)
+	{
+		this.mediaFilterKeys = strings;
+		return this ;
+	}
+	
+	private static int i=0;	
+	/**
+	 * download medias to deirectory
+	 * @param media
+	 * @param path
+	 * @return
+	 */
+	public Scraper downloadMedias(String media,String path)
+	{
+		Download.mkdir(path);
+		if(media.equalsIgnoreCase("image"))
+			{
+			Set<String> images=new HashSet<String>(this.getMedias().get("image"));
+			if(this.mediaFilterKeys != null)
+				images = Filter.FilterMedia(new HashSet<String>(this.getMedias().get("image")), this.mediaFilterKeys);
+			for(String image : images)
+				try {
+					Download.downloadImage(image, path+"image"+i);
+					i++;
+				} catch (IOException e) {
+					System.out.println(e.getMessage());
+				}
+			}
+		return this ;
+	}
+
 	private boolean hasFileExtension(String s) 
 	{
 	    return s.matches("^[\\w\\d\\:\\/\\.]+\\.\\w{3,4}(\\?[\\w\\W]*)?$");
 	}
-	
-
-   
 }

@@ -1,3 +1,4 @@
+package scrappers;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,7 +16,7 @@ import org.jsoup.nodes.Element;
  */
 public class Search {
 	
-	private static Search instance = new Search();
+	private static Search instance;
 	
 	private static Document sourceDoc ;
 	private Set<Element> matchedTags = new HashSet<Element>();
@@ -25,9 +26,9 @@ public class Search {
 		{
 			sourceDoc = Jsoup.connect(url).get();
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
-		return instance;
+		return new Search();
 	}
 	/**
 	 * Check if a keyword existe in a webpage
@@ -48,6 +49,7 @@ public class Search {
 	public Set<String> find(String keyword)
 	{
 		Set<String> results = new HashSet<String>();
+		System.out.println(results.toString());
 		Iterator<Element> elementIterator = this.deepSearch(sourceDoc.select("html").first(),keyword).iterator();
 		while(elementIterator.hasNext())
 		{
