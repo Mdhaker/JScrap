@@ -1,6 +1,7 @@
 package scrappers;
 
 import loaders.HtmlUnitLoader;
+import loaders.Loader;
 import utils.ExcelWrite;
 import utils.Rinterface;
 
@@ -8,7 +9,7 @@ public class main {
 
 	public static void main(String[] args) 
 	{ 
-		String url = "http://www.fanpop.com/clubs/mahatma-gandhi";
+		String url = "https://www.payoneer.com/en/";
 		//Scraper.source(url).getPhones();
 		//System.out.println(Scraper.source(url).startCrawl());
 		//System.out.println("Before save keyword delta" + Search.source(url).find("delta").toString());
@@ -18,8 +19,10 @@ public class main {
 		//System.out.println(Scraper.source("http://www.mkgandhi.org").getSocialMediaLinks().toString());
 	
 		//HtmlUnitLoader.getPageContent("http://www.solaraccreditation.com.au/products/modules/building-approved-modules.html", 1);
-		Rinterface in = new Rinterface(url);
-		in.scrapInFile("/home/dhaker/Desktop/firstRtest.xls");
+		//Rinterface in = new Rinterface(url);
+		//in.scrapInFile("/home/dhaker/Desktop/firstRtest.xls");
+		
+		
 		
 	}
 

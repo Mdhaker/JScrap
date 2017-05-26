@@ -5,6 +5,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import loaders.Loader;
 import utils.Download;
 import utils.ExcelWrite;
 import utils.Filter;
@@ -44,6 +45,7 @@ public class Scraper {
 	private static Scraper instance;
 	private String rootURL;
 	private String[] mediaFilterKeys;
+	private Loader loader ;
 	
 	private Scraper()
 	{
@@ -83,10 +85,11 @@ public class Scraper {
 		return instance ;
 		}
 	}
-	public static Scraper sourceHTML(String html)
+	public static Scraper source(Loader load)
 	{
 		instance = new Scraper();
-		htmlpage = Jsoup.parse(html) ;
+		instance.loader = load ;
+		htmlpage = Jsoup.parse(load.getHtmlContent()) ;
 		return instance ;
 	}
 	
@@ -371,6 +374,11 @@ public class Scraper {
 	public String getRootURL()
 	{
 		return this.rootURL;
+	}
+	
+	public Loader getLoader()
+	{
+		return this.loader;
 	}
 	
 	/**

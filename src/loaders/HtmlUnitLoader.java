@@ -16,17 +16,26 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import scrappers.Scraper;
 
-public class HtmlUnitLoader {
+public class HtmlUnitLoader extends Loader{
 
 
+	private WebClient webclient ;
+	private String url;
+	
+	public HtmlUnitLoader(String url)
+	{
+		super(url);
+		this.webclient = new WebClient(BrowserVersion.FIREFOX_52);
+		this.url = url ;
+	}
 
-	public static String HtmlContent(String url)
+	public  String getHtmlContent()
 	{
 		String htmlcontent = "";
-		try (final WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52)) {
+		
 	        HtmlPage page=null;
 			try {
-				page = webClient.getPage(url);
+				page = this.webclient.getPage(url);
 				
 			} catch (FailingHttpStatusCodeException e) {
 				// TODO Auto-generated catch block
@@ -41,15 +50,15 @@ public class HtmlUnitLoader {
 			if(page.isHtmlPage())
 				return page.asXml();
 	        return htmlcontent;
-	    }
+	    
 	}
-	public static String getPageContent(String url,int pagenumber)
+	public String getPagedContent(int pagenumber)
 	{
 		String htmlcontent = "";
-		try (final WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52)) {
+		
 	        HtmlPage page=null;
 			try {
-				page = webClient.getPage(url);
+				page = this.webclient.getPage(url);
 				List<HtmlAnchor> anchors = page.getAnchors();
 				for(HtmlAnchor anchor: anchors)
 				{
@@ -79,7 +88,7 @@ public class HtmlUnitLoader {
 			if(page.isHtmlPage())
 				return page.asXml();
 	        return htmlcontent;
-	    }
+	   
 		
 	}
 	
