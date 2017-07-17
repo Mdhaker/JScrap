@@ -2,6 +2,9 @@ package utils;
 
 
 import java.net.*;
+
+import org.apache.commons.io.FileUtils;
+
 import java.io.InputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -59,5 +62,35 @@ public class Download {
 			System.out.println("Directory exist");
 		}
 	}
+	
+	// Using Java IO
+	 public static void saveFileFromUrlWithJavaIO(String fileName, String fileUrl)
+	 throws MalformedURLException, IOException {
+	 BufferedInputStream in = null;
+	 FileOutputStream fout = null;
+	 try {
+	 in = new BufferedInputStream(new URL(fileUrl).openStream());
+	 fout = new FileOutputStream(fileName);
+
+	byte data[] = new byte[1024];
+	 int count;
+	 while ((count = in.read(data, 0, 1024)) != -1) {
+	 fout.write(data, 0, count);
+	 }
+	 } finally {
+	 if (in != null)
+	 in.close();
+	 if (fout != null)
+	 fout.close();
+	 }
+	 }
+
+	// Using Commons IO library
+	 // Available at http://commons.apache.org/io/download_io.cgi
+	 public static void saveFileFromUrlWithCommonsIO(String fileName,
+	 String fileUrl) throws MalformedURLException, IOException {
+	 FileUtils.copyURLToFile(new URL(fileUrl), new File(fileName));
+	 }
+
 
 }

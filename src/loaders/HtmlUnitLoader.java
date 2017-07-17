@@ -91,5 +91,24 @@ public class HtmlUnitLoader extends Loader{
 	   
 		
 	}
+
+	@Override
+	public String getContentByClick(String selector) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String login(String login, String password, String redirect) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String navigateToUrl(String url,boolean back) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 }

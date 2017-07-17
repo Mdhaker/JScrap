@@ -30,6 +30,11 @@ public class Search {
 		}
 		return new Search();
 	}
+	public static Search source(Document doc)
+	{
+		sourceDoc = doc ;
+		return new Search();
+	}
 	/**
 	 * Check if a keyword existe in a webpage
 	 * @param keyword keyword used for the search
@@ -50,6 +55,7 @@ public class Search {
 	{
 		Set<String> results = new HashSet<String>();
 		System.out.println(results.toString());
+		System.out.println(sourceDoc.toString());
 		Iterator<Element> elementIterator = this.deepSearch(sourceDoc.select("html").first(),keyword).iterator();
 		while(elementIterator.hasNext())
 		{

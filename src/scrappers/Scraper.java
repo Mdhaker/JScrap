@@ -5,12 +5,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import config.Config;
 import loaders.Loader;
 import utils.Download;
 import utils.ExcelWrite;
 import utils.Filter;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,6 +48,8 @@ public class Scraper {
 	private String rootURL;
 	private String[] mediaFilterKeys;
 	private Loader loader ;
+	private int currentPage;
+	private boolean jsoup;
 	
 	private Scraper()
 	{
@@ -56,8 +60,9 @@ public class Scraper {
 		this.documentExt = new Vector<String>();
 		this.addDocumentExt("docx","pdf","txt");
 		this.audioExt = new Vector<String>();
-		this.addAudioExt("mp3","ogg");
+		this.addAudioExt("mp3","ogg","wav","aif");
 		this.iframes = new Vector<String>();
+		this.currentPage = 1;		
 	}
 	/**
 	 * builder with a target url
@@ -67,8 +72,13 @@ public class Scraper {
 	public static Scraper source(String url)
 	{	instance = new Scraper();
 		instance.rootURL = url;
+		if(!url.contains("http"))
+		{
+			url = "http://"+url;
+		}
 		try 
 		{
+			instance.jsoup = true ;
 			baseURL = "http://"+url.split("://")[1].split("/")[0];
 			htmlpage = Jsoup.connect(url).get();
 			if(!htmlpage.select("iframe").isEmpty())
@@ -82,15 +92,88 @@ public class Scraper {
 		}
 		catch (Exception e) 
 		{	System.out.println("Error ====> " + e.getMessage());
+			instance.jsoup = false ;
 		return instance ;
 		}
 	}
+	/**
+	 * load url with Selniuem or HtmlUnit
+	 * @param load 
+	 * @return
+	 */
 	public static Scraper source(Loader load)
 	{
 		instance = new Scraper();
+		baseURL = "http://"+load.getUrl().split("://")[1].split("/")[0];
 		instance.loader = load ;
 		htmlpage = Jsoup.parse(load.getHtmlContent()) ;
+		return instance;
+	}
+	
+	public static Scraper source(Document sourceDoc)
+	{
+		instance = new Scraper();
+		htmlpage = sourceDoc ;
 		return instance ;
+	}
+	
+	private boolean lastpage=false;
+	public boolean isLastPage()
+	{
+		return this.lastpage;
+	}
+	public int getCurrentPage()
+	{
+		return this.currentPage;
+	}
+	
+	public String getBaseURL()
+	{
+		return baseURL;
+	}
+	public Document getRootDocument()
+	{
+		return htmlpage;
+	}
+	public Scraper nextPage()
+	{		
+		String result="" ;
+		this.currentPage++;
+				try
+				{
+				result = this.loader.getPagedContent(this.currentPage);	
+				}
+				catch(NullPointerException e)
+				{
+					System.err.println("No Loader created for this scrapper...");
+				}
+		if(!result.isEmpty())
+			htmlpage =Jsoup.parse(result);
+		else
+		{
+			lastpage=true ;
+			System.out.println("No dynamic pages dynamic pages to load");
+		}
+		return this ;
+	}
+	/**
+	 * update html content of the current scrapper
+	 * @param htmlcontent
+	 */
+	public void updateContent(String htmlcontent)
+	{
+		htmlpage =Jsoup.parse(htmlcontent);
+	}
+	
+	/**
+	 * Return elements that matchs the Css query selector
+	 * @param cssSelector 
+	 * @return
+	 */
+	
+	public Elements selectElements(String cssSelector)
+	{
+		return htmlpage.select(cssSelector);
 	}
 	
 	/**
@@ -116,6 +199,15 @@ public class Scraper {
 	}
 	
 	/**
+	 * Get HTML elements by a CSS selector
+	 * @param selector
+	 * @return
+	 */
+	public Elements getHTMLelements(String selector)
+	{
+		return htmlpage.select(selector);
+	}
+	/**
 	 * @deprecated  we use get media to get all type of media including images </br>
 	 *              
 	 * use {@link #getMedia()} instead like this: 
@@ -131,7 +223,7 @@ public class Scraper {
     {
     	this.images = new HashSet<String>();
        Pattern imgPattern = Pattern.compile("(.*/)*.+\\.(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP)$");
-       int i = 0;
+       
        Elements imgs = htmlpage.select("[src]");
        for (Element img : imgs) 
        {   
@@ -161,7 +253,7 @@ public class Scraper {
 		this.phones = new HashSet<String>();
 		Pattern phonePattern = Pattern.compile("^((((\\(\\d{3}\\))|(\\d{3}-))\\d{3}-\\d{4})|(\\+?\\d{2}((-| )\\d{1,8}){1,5}))(( x| ext)\\d{1,5}){0,1}$");
         Matcher phoneMatcher = phonePattern.matcher(htmlpage.text());
-        System.out.println(phoneMatcher.find());
+        //System.out.println(phoneMatcher.find());
         while (phoneMatcher.find()) 
         {
             phones.add(phoneMatcher.group());
@@ -189,7 +281,7 @@ public class Scraper {
 				 this.Links.add(href);
 			 
 		 }
-		 this.fetchLinks();
+		 this.fetchLinks(this.Links);
 	        	return Links;
 	}
 	/**
@@ -241,7 +333,7 @@ public class Scraper {
 		for (Element file : files) 
 	    {
 	    	Matcher m = Pattern.compile("[^/.]*\\.(\\w+)[^/]*$").matcher(file.attr("abs:src"));
-	    	System.out.println(file.attr("abs:src"));
+	    	//System.out.println(file.attr("abs:src"));
 	    	if(m.find()&&m.group(1).equals(ext))
 	    	{
 	    		fetchedFiles.add(file.attr("abs:src"));		
@@ -256,6 +348,9 @@ public class Scraper {
 	 */
 	public Map<String,List<String>> getMedias()
 	{
+		
+		if(!Config.Debug)
+			Config.hideDebug();
 		this.medias = new HashMap<String,List<String>>();
 		List<String> audioMedia = new ArrayList<String>();
 		List<String> imageMedia = new ArrayList<String>();
@@ -263,44 +358,62 @@ public class Scraper {
 		List<String> videoMedia = new ArrayList<String>();
 		List<String> unknownMedia = new ArrayList<String>();
 	    Elements medias = htmlpage.select("[src]");
+	    medias.addAll(htmlpage.select("[href]"));
 	    String ext="";
+	    Set<String> fileURLS = new HashSet<String>();
 	    for (Element meds : medias) 
 	    {
-	    	System.out.println(meds.attr("abs:src"));
-	    	Matcher m = Pattern.compile("[^/.]*\\.(\\w+)[^/]*$").matcher(meds.attr("abs:src"));
+	    	String fileURL="";
+	    	if(meds.tagName().equals("a"))
+	    		fileURL=meds.attr("href");
+	    	else
+	    		fileURL=meds.attr("abs:src");
+	    	Matcher m = Pattern.compile("[^/.]*\\.(\\w+)[^/]*$").matcher(fileURL);
+	    	if(m.find())
+	    			fileURLS.add(fileURL);
+	    	else
+	    		System.out.println("URL is not a file");
+	    }
+	    	for(String fileurl : fileURLS)
+	    	{
+	    		if(!fileurl.contains(this.baseURL))
+	    			fileurl = this.baseURL+"/"+fileurl;
+	    		Matcher m = Pattern.compile("[^/.]*\\.(\\w+)[^/]*$").matcher(fileurl);
+	    	
 	    	if(m.find())
 	    	{
 	    		ext=m.group(1);
 	    	}
 				if(this.imagesExt.contains(ext))
 				{
-					imageMedia.add(meds.attr("abs:src").split("\\?")[0]);
+					imageMedia.add(fileurl.split("\\?")[0]);
 				}
 				else if(this.documentExt.contains(ext))
 				{
-					documentMedia.add(meds.attr("abs:src").split("\\?")[0]);
+					documentMedia.add(fileurl.split("\\?")[0]);
 				}
 				else if (this.videoExt.contains(ext))
 				{
-					videoMedia.add(meds.attr("abs:src").split("\\?")[0]);
+					videoMedia.add(fileurl.split("\\?")[0]);
 				}
 				else if (this.audioExt.contains(ext))
 				{
-					audioMedia.add(meds.attr("abs:src").split("\\?")[0]);
+					audioMedia.add(fileurl.split("\\?")[0]);
 				}
 				else
-					unknownMedia.add(meds.attr("abs:src").split("\\?")[0]);
+					unknownMedia.add(fileurl.split("\\?")[0]);
 	 	   
 				this.medias.put("image", imageMedia);
 				this.medias.put("video", videoMedia);
 				this.medias.put("document", documentMedia);
 				this.medias.put("audio", audioMedia);
 	 	   		this.medias.put("unknown", unknownMedia);
-	 	}
+	    	}
+	 	Config.showDebug();
 		return this.medias;
 	}
 	
-	private Vector<String> getVideoExt() 
+	public Vector<String> getVideoExt() 
 	{
 		return videoExt;
 	}
@@ -309,7 +422,7 @@ public class Scraper {
 		for(String ext:videosExt)
 			this.videoExt.add(ext);
 	}
-	private Vector<String> getImagesExt() 
+	public Vector<String> getImagesExt() 
 	{
 		return imagesExt;
 	}
@@ -318,7 +431,7 @@ public class Scraper {
 		for(String ext:imagesExt)
 		this.imagesExt.add(ext);
 	}
-	private Vector<String> getDocumentExt() 
+	public Vector<String> getDocumentExt() 
 	{
 		return documentExt;
 	}
@@ -328,7 +441,7 @@ public class Scraper {
 			this.documentExt.add(ext);
 	}
 	
-	private Vector<String> getAudioExt() {
+	public Vector<String> getAudioExt() {
 		return audioExt;
 	}
 	public void addAudioExt(String... audiosExt) 
@@ -338,22 +451,33 @@ public class Scraper {
 	}
 		
 	// Fetching internal and external links by the base url and redirect words...
-	private void fetchLinks()
+	private void fetchLinks(Set<String> links)
 	{
+		
 		this.externalLinks = new HashSet<String>();
 		this.internalLinks = new HashSet<String>();
-		for(String link : this.Links)
+		
+		for(String link : links)
 		{
-			if((link.contains(baseURL)||link.startsWith("/"))
-					&&!link.contains("URL=")
-					&&!link.contains("redirect")
-					&&!link.split("://")[1].split(":")[0].contains("http"))
-			{
-				this.internalLinks.add(link);
+			//System.out.println(link);
+			
+			try{
+				if((link.contains(baseURL)||link.startsWith("/"))
+						&&!link.contains("URL=")
+						&&!link.contains("redirect")
+						&&!link.split("://")[1].split(":")[0].contains("http"))
+				{
+					this.internalLinks.add(link);
+				}
+				else
+				{
+					this.externalLinks.add(link);
+				}
 			}
-			else
+			catch(NullPointerException e)
 			{
-				this.externalLinks.add(link);
+				
+				System.out.println("this is the null link = "+link);
 			}
 		}
 	}
@@ -379,6 +503,11 @@ public class Scraper {
 	public Loader getLoader()
 	{
 		return this.loader;
+	}
+	
+	public boolean isJsoupLoaded()
+	{
+		return this.jsoup;
 	}
 	
 	/**
@@ -412,25 +541,49 @@ public class Scraper {
 	 */
 	public Scraper downloadMedias(String media,String path)
 	{
+		
 		Download.mkdir(path);
-		if(media.equalsIgnoreCase("image"))
+		
+		switch (media)
+		{
+			case "image":	
 			{
 			Set<String> images=new HashSet<String>(this.getMedias().get("image"));
+			
+			//Set<String> video=new HashSet<String>(this.getMedias().get("video"));
+			//Set<String> document=new HashSet<String>(this.getMedias().get("document"));
 			if(this.mediaFilterKeys != null)
 				images = Filter.FilterMedia(new HashSet<String>(this.getMedias().get("image")), this.mediaFilterKeys);
 			for(String image : images)
 				try {
 					Download.downloadImage(image, path+"image"+i);
 					i++;
-				} catch (IOException e) {
-					System.out.println(e.getMessage());
+				} catch (IOException e) 
+				{
 				}
+			break ;
 			}
+			case "audio" : 
+			{
+				Set<String> audio=new HashSet<String>(this.getMedias().get("audio"));
+				for(String audiofile : audio)
+					try {
+						System.out.println("File to create :"+path+audiofile);
+						Download.saveFileFromUrlWithJavaIO(path+audiofile.substring(audiofile.lastIndexOf("/")), audiofile);
+					} catch (MalformedURLException e) {
+						e.printStackTrace();
+					} catch (IOException e) 
+				{
+						e.printStackTrace();
+					}
+				break ;
+			}
+			
+		}
+		
+		
 		return this ;
 	}
 
-	private boolean hasFileExtension(String s) 
-	{
-	    return s.matches("^[\\w\\d\\:\\/\\.]+\\.\\w{3,4}(\\?[\\w\\W]*)?$");
-	}
+	
 }

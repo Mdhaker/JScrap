@@ -1,7 +1,9 @@
 package loaders;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.jboss.netty.handler.timeout.TimeoutException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -15,8 +17,9 @@ public class SeleniumLoader extends Loader{
 	
 	private WebDriver driver;
 	public SeleniumLoader(String url)
-	{
+	{		
 		super(url);
+		System.out.println("this is the driver path "+Config.SELENIUM_CHROME_DRIVER_PATH);
 		System.setProperty("webdriver.chrome.driver", Config.SELENIUM_CHROME_DRIVER_PATH);
          driver = new ChromeDriver();       
         driver.get(url);
@@ -29,31 +32,81 @@ public class SeleniumLoader extends Loader{
 	public  String getPagedContent(int pagenumber)
 	{
 				String htmlContent ="";
-				List<WebElement> anchors = this.driver.findElements(By.name("a"));
+				List<WebElement> anchors = this.driver.findElements(By.tagName("a"));
 				for(WebElement anchor: anchors)
 				{
-					if(anchor.getAttribute("href").equals("#")||anchor.getAttribute("href").equals("#"))
+					try
 					{
-						System.out.println(anchor.getText());
-						if(anchor.getText().contains("page"+pagenumber)
-								||anchor.getText().contains("page "+pagenumber)
-								||anchor.getText().equals(""+pagenumber))
+						if(anchor.getText().equalsIgnoreCase("page"+pagenumber)
+								||anchor.getText().equalsIgnoreCase("page "+pagenumber)
+								||anchor.getText().equalsIgnoreCase(""+pagenumber)&&!anchor.getAttribute("href").contains("rating"))
 						{
-							System.out.println(anchor.getText());
+							//System.out.println("Pagination anchors : "+anchor.getAttribute("href"));
 							anchor.click();
-							(new WebDriverWait(this.driver, 10)).until(new ExpectedCondition<Boolean>() {
-					            public Boolean apply(WebDriver d) {
-					                return !d.getPageSource().isEmpty();
-					            }
-					        });
+							this.selniuemWait(10);
+							this.driver.manage().timeouts().pageLoadTimeout(10, TimeUnit.SECONDS);
 							return this.driver.getPageSource();
 						}
 						
 					}
-				}
+					catch(org.openqa.selenium.WebDriverException e)
+					{
+						//System.err.println(e.getMessage());
+					}
+			}
+				
 				return htmlContent;
 		
 	}
+	@Override
+	public String getContentByClick(String linkText) 
+	{
+		WebElement elementToClick = this.driver.findElement(By.linkText(linkText));
+		elementToClick.click();
+		this.selniuemWait(10);
+		String result = this.driver.getPageSource();
+		this.driver.navigate().back();
+		return result ;
+	}
+	@Override
+	public String login(String login, String password, String redirect) 
+	{
+		this.driver.findElement(By.id("id_username")).sendKeys(login);     
+	    this.driver.findElement(By.id("id_password")).sendKeys(password);     
+	    this.driver.findElement(By.cssSelector("input[value='login']")).submit();
+	    this.selniuemWait(10);
+	    this.driver.navigate().to(redirect);
+	    this.selniuemWait(10);
+		return this.driver.getPageSource();
+	}
 	
+	private void selniuemWait(int milliseconds)
+	{
+		(new WebDriverWait(this.driver, milliseconds)).until(new ExpectedCondition<Boolean>() {
+            public Boolean apply(WebDriver d) 
+            {
+                return !d.getPageSource().isEmpty();
+            }
+        });
+	}
+	@Override
+	public String navigateToUrl(String url,boolean back) {
+		String result = "";
+		
+		try
+		{this.driver.navigate().to(url);
+		this.selniuemWait(10);
+		result = this.driver.getPageSource();
+		if(back)
+		{
+			this.driver.navigate().back();
+			this.selniuemWait(10);
+		}
+		}
+		catch(TimeoutException e)
+		{
+		}
+		return result;
+	}
 
 }

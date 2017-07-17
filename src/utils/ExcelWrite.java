@@ -4,10 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -17,8 +18,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import config.Config;
 import scrappers.Scraper;
 import scrappers.Search;
+import scrappers.Table;
 
 public class ExcelWrite {
 	
@@ -29,7 +32,10 @@ public class ExcelWrite {
 	private Row headerRow;
 	public ExcelWrite(String filepath)
 	{
-		
+		if(!(filepath.endsWith(".xls")||filepath.endsWith(".xlsx")))
+			{
+				Config.showDebug();System.err.println("Please provide an excel file path ending with ex file.xls or file.xlsx");Config.hideDebug();
+			}
 		this.path=filepath;
 		File file = new File(this.path);
 				
@@ -37,8 +43,9 @@ public class ExcelWrite {
 			this.workbook = this.getWorkbook(filepath);
 			file.createNewFile();			
 			} catch (IOException e) {
-			System.out.println("file path is not an excel file");
-		}
+			Config.showDebug();System.out.println("Please provide an excel file path ending with ex file.xls or file.xlsx");Config.hideDebug();
+		
+			}
 	}
 
 	/**
@@ -61,6 +68,11 @@ public class ExcelWrite {
 	    return workbook;
 	}
 	
+	/**
+	 * Create or add a workbook sheet
+	 * @param name name of the sheet to add
+	 * @return
+	 */
 	public ExcelWrite createSheet(String name)
 	{		
 		this.sheet =this.workbook.createSheet(name);
@@ -74,6 +86,11 @@ public class ExcelWrite {
 		return this ;
 	}
 	
+	/**
+	 * Saving scraping result in excel file
+	 * @param result A scraper object with the loaded url
+	 * @return
+	 */
 	public ExcelWrite saveScrapingResult(Scraper result)
 	{
 		if(this.sheet == null)
@@ -95,8 +112,8 @@ public class ExcelWrite {
 		int lastcol=0;
 		if(headerRow.getLastCellNum() != -1)
 			lastcol=headerRow.getLastCellNum();
-		System.out.println("index of the scraping result start"+lastcol);
-		System.out.println("index of the scraping result shoud be"+this.sheet.getRow(0).getLastCellNum());
+		//System.out.println("index of the scraping result start"+lastcol);
+		//System.out.println("index of the scraping result shoud be"+this.sheet.getRow(0).getLastCellNum());
 		// saving emails
 		headerRow.createCell(lastcol+0).setCellValue("Emails");
 		this.createCol(result.getEmails(),lastcol+0);
@@ -127,13 +144,17 @@ public class ExcelWrite {
 		headerRow.createCell(lastcol+6).setCellValue("Links");
 		this.createCol(result.getInternalLinks(),lastcol+6);
 		
+		//saving social media links
+		headerRow.createCell(lastcol+7).setCellValue("Social links");
+		this.createCol(result.getSocialMediaLinks(),lastcol+7);
+		
 		this.saveWorkbook();
 			
 			return this;
 			
 	}
 	
-	private void saveWorkbook() {
+	public void saveWorkbook() {
 
 		try (FileOutputStream outputStream = new FileOutputStream(this.path)) {
 	        workbook.write(outputStream);
@@ -143,7 +164,12 @@ public class ExcelWrite {
 			System.out.println(e.getMessage());
 		}
 	}
-
+	/**
+	 * add a key search table
+	 * @param url url adress to fetch
+	 * @param key query key word
+	 * @return
+	 */
 	public ExcelWrite saveSearchResult(String url,String key)
 	{
 		
@@ -171,11 +197,29 @@ public class ExcelWrite {
 		headerRow.createCell(startColIndex).setCellValue("mot clé : "+key);
 		Set<String> searchResult =Search.source(url).find(key);
 		
-		System.out.println("inside save search result keyword ="+key+" "+Search.source(url).find(key));
+		//System.out.println("inside save search result keyword ="+key+" "+Search.source(url).find(key));
 		
 		this.createCol(searchResult, startColIndex);
 		this.saveWorkbook();
 		headerRow.setRowStyle(cellStyle);
+		return this;
+	}
+	
+	private static int i=0;
+	public ExcelWrite saveTable(Table table)
+	{
+		i++;
+		this.createSheet("table "+i);		
+		for(int rowi=0;rowi<table.getRowCount();rowi++)
+		{
+			Row row = this.sheet.createRow(rowi);
+			for(int coli=0;coli<table.getColumnCount();coli++)
+			{
+				row.createCell(coli).setCellValue(table.getValueAt(rowi, coli));
+			}
+		}
+		
+		this.saveWorkbook();
 		return this;
 	}
 	
@@ -195,5 +239,53 @@ public class ExcelWrite {
 		
 	}
 	
+	/**
+	 * Create and add columns to an excel sheet
+	 * @param columnItems items to add
+	 * @param headeritem column title
+	 * @param sheetname 
+	 * @return
+	 */
+	public ExcelWrite addColumn(List<String> columnItems, String headeritem,String... sheetname)
+	{
+		if(this.sheet == null)
+		try
+			{this.sheet = this.workbook.createSheet(sheetname[0]);}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			this.sheet = this.workbook.createSheet();
+		}
+		int colIndex = 0;
+		if(this.sheet.getRow(this.sheet.getLastRowNum()) != null)
+			colIndex =this.sheet.getRow(this.sheet.getLastRowNum()).getLastCellNum();
+		Row headerRow =null ;
+		if(this.sheet.getRow(0) != null)
+			headerRow = this.sheet.getRow(0);
+		else
+			headerRow = this.sheet.createRow(0);
+		
+		headerRow.createCell(colIndex).setCellValue(headeritem);
+		int rowCount = 1;
+		for(String value : columnItems)
+		{
+			Cell cell;
+			if(this.sheet.getRow(rowCount)==null)
+				cell =this.sheet.createRow(rowCount).createCell(colIndex);
+			else
+				cell = this.sheet.getRow(rowCount).createCell(colIndex);
+			cell.setCellValue(value);
+			rowCount++;
+		}	
+		this.saveWorkbook();
+		return this ;
+	}
+	
+	public ExcelWrite addColumn(String item,String headeritem,String... sheetname)
+	{
+		List<String> columns = new ArrayList<String>();
+		columns.add(item);
+		this.addColumn(columns, headeritem, sheetname);
+		return this;		
+	}
 	
 }
