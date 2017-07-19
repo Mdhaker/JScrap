@@ -10,6 +10,17 @@ public class Config {
 	private static PrintStream showStream = System.out;
 	private static PrintStream hideStream    = new PrintStream(new Config.HideStream());
 	public static boolean Debug = false ;
+	
+	public static boolean isWindows()
+	{
+		return (System.getProperty("os.name").equalsIgnoreCase("Windows"));
+	}
+	
+	public static boolean isLinux()
+	{
+		return (System.getProperty("os.name").equalsIgnoreCase("linux"));
+	}
+	
 	public static void showDebug()
 	{
 		System.setOut(showStream);			
@@ -19,7 +30,7 @@ public class Config {
 		System.setOut(hideStream);
 	}
 	
-	public static String SELENIUM_CHROME_DRIVER_PATH ="/lib/webDriver/chromedriver";
+	public static String SELENIUM_CHROME_DRIVER_PATH ="/webDriver/chromedriver";
 	
 	public Config(String driverpath)
 	{

@@ -89,6 +89,7 @@ public class Download {
 	 // Available at http://commons.apache.org/io/download_io.cgi
 	 public static void saveFileFromUrlWithCommonsIO(String fileName,
 	 String fileUrl) throws MalformedURLException, IOException {
+		 //System.out.println("this is the file name : "+fileName+" this the url to donwload "+fileUrl);
 	 FileUtils.copyURLToFile(new URL(fileUrl), new File(fileName));
 	 }
 

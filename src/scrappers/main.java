@@ -1,5 +1,8 @@
 package scrappers;
 
+import org.apache.commons.exec.OS;
+
+import config.Config;
 import loaders.HtmlUnitLoader;
 import loaders.Loader;
 import utils.ExcelWrite;
@@ -9,9 +12,13 @@ public class main {
 
 	public static void main(String[] args) 
 	{ 
-		Rinterface r = new Rinterface("http://www.poste.tn/contact.php?code_menu=8");
-		r.setChromeDriverPath("/home/dhaker/datacollector/");
+		Rinterface.setChromeDriverPath("/home/dhaker/datacollector/inst");
+		Rinterface r = new Rinterface("https://www.planwallpaper.com/wallpapers");
+		
 		String path ="/home/dhaker/Desktop/ThisDirectoryForTest/";
-		r.scrapInFile(path+"/scrapfilepost.xls");
+		//r.scrapInFile(path+"/scrapfilepost.xls");
+		//System.out.println(Config.isWindows());
+		r.downloadImages(path);
+		
 	}
 }

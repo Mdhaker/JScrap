@@ -41,7 +41,7 @@ public class Rinterface {
 			}
 		catch(Exception e)
 			{
-				System.out.println(e.getMessage());
+				//System.out.println(e.getMessage());
 				System.out.println("Selniuem not working, this is the driver path "+Config.SELENIUM_CHROME_DRIVER_PATH);
 				//this.initUnitLoader();
 			}	
@@ -153,7 +153,7 @@ public class Rinterface {
 		{
 			Config.hideDebug();
 		}
-		System.out.println("This is selniuem path : "+Config.SELENIUM_CHROME_DRIVER_PATH);
+		//System.out.println("This is selniuem path : "+Config.SELENIUM_CHROME_DRIVER_PATH);
 		System.out.println("Scraping started");
 		ExcelWrite writer = new ExcelWrite(path);
 		if(!selniuem)
@@ -193,7 +193,6 @@ public class Rinterface {
 			{
 				if(filename.endsWith("."+ext))
 				{
-					
 					try {
 						Download.saveFileFromUrlWithCommonsIO("/"+path+filename, image);
 					} catch (MalformedURLException e) {

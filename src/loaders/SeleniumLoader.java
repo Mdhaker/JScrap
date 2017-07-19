@@ -2,12 +2,17 @@ package loaders;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import org.jboss.netty.handler.timeout.TimeoutException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -19,7 +24,7 @@ public class SeleniumLoader extends Loader{
 	public SeleniumLoader(String url)
 	{		
 		super(url);
-		System.out.println("this is the driver path "+Config.SELENIUM_CHROME_DRIVER_PATH);
+		System.setProperty("webdriver.chrome.verboseLogging", "false");
 		System.setProperty("webdriver.chrome.driver", Config.SELENIUM_CHROME_DRIVER_PATH);
          driver = new ChromeDriver();       
         driver.get(url);

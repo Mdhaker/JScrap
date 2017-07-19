@@ -91,7 +91,8 @@ public class Scraper {
 			return instance ;
 		}
 		catch (Exception e) 
-		{	System.out.println("Error ====> " + e.getMessage());
+		{	
+			System.out.println(e.getMessage());
 			instance.jsoup = false ;
 		return instance ;
 		}
@@ -152,7 +153,7 @@ public class Scraper {
 		else
 		{
 			lastpage=true ;
-			System.out.println("No dynamic pages dynamic pages to load");
+			//System.out.println("No dynamic pages dynamic pages to load");
 		}
 		return this ;
 	}
@@ -251,7 +252,7 @@ public class Scraper {
 	public Set<String> getPhones() 
 	{
 		this.phones = new HashSet<String>();
-		Pattern phonePattern = Pattern.compile("^((((\\(\\d{3}\\))|(\\d{3}-))\\d{3}-\\d{4})|(\\+?\\d{2}((-| )\\d{1,8}){1,5}))(( x| ext)\\d{1,5}){0,1}$");
+		Pattern phonePattern = Pattern.compile("(^((((\\(\\d{3}\\))|(\\d{3}-))\\d{3}-\\d{4})|(\\+?\\d{2}((-| )\\d{1,8}){1,5}))(( x| ext)\\d{1,5}){0,1}$)|((([0-9][0-9](\\ |.)[0-9][0-9][0-9](\\ |.)[0-9][0-9][0-9])))");
         Matcher phoneMatcher = phonePattern.matcher(htmlpage.text());
         //System.out.println(phoneMatcher.find());
         while (phoneMatcher.find()) 
@@ -307,7 +308,9 @@ public class Scraper {
 		socialLinks.addAll(this.getSocialLinks("fb"));
 		socialLinks.addAll(this.getSocialLinks("linkedin"));
 		socialLinks.addAll(this.getSocialLinks("instagram"));
-		socialLinks.addAll(this.getSocialLinks("pintrest"));
+		socialLinks.addAll(this.getSocialLinks("ytb"));
+		socialLinks.addAll(this.getSocialLinks("youtube"));
+		socialLinks.addAll(this.getSocialLinks("tumblr"));
 		return socialLinks;
 	}
 	public Set<String> getExternalLinks() 
