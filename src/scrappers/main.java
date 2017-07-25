@@ -13,12 +13,9 @@ public class main {
 	public static void main(String[] args) 
 	{ 
 		Rinterface.setChromeDriverPath("/home/dhaker/datacollector/inst");
-		Rinterface r = new Rinterface("https://www.planwallpaper.com/wallpapers");
+		Rinterface r = new Rinterface("https://www.brainyquote.com/quotes/keywords/scrap.html");
 		
 		String path ="/home/dhaker/Desktop/ThisDirectoryForTest/";
-		//r.scrapInFile(path+"/scrapfilepost.xls");
-		//System.out.println(Config.isWindows());
-		r.downloadImages(path);
-		
+		System.out.println(r.getSearchKeyResult("earth")[1]);
 	}
 }

@@ -9,6 +9,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.logging.LogType;
 import org.openqa.selenium.logging.LoggingPreferences;
 import org.openqa.selenium.remote.CapabilityType;
@@ -24,9 +26,12 @@ public class SeleniumLoader extends Loader{
 	public SeleniumLoader(String url)
 	{		
 		super(url);
-		System.setProperty("webdriver.chrome.verboseLogging", "false");
 		System.setProperty("webdriver.chrome.driver", Config.SELENIUM_CHROME_DRIVER_PATH);
-         driver = new ChromeDriver();       
+		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+		capabilities.setCapability("chrome.verbose", false);
+		driver = new ChromeDriver(capabilities);	
+		
+           
         driver.get(url);
         
 	}

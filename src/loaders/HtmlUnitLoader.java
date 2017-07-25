@@ -3,7 +3,9 @@ package loaders;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.logging.Level;
 
+import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,6 +27,9 @@ public class HtmlUnitLoader extends Loader{
 	public HtmlUnitLoader(String url)
 	{
 		super(url);
+		LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+		java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
+		java.util.logging.Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF); 
 		this.webclient = new WebClient(BrowserVersion.FIREFOX_52);
 		this.url = url ;
 	}

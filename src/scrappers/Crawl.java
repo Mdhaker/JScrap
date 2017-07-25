@@ -3,6 +3,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import config.Config;
 import utils.Download;
 import utils.ExcelWrite;
 
@@ -44,6 +45,7 @@ public class Crawl
 	public Crawl start()
 	{
 		//Recursive call starts
+		Config.hideDebug();
 				System.out.println("Started Crawling...");
 				this.crawling(this.rootURL,this.writer);
 				System.out.println("\nFinished Crawling and will start "+this.scrapers.size()+" threads..."+
@@ -54,6 +56,7 @@ public class Crawl
 						Robot robot = new Robot(scraper);
 						robot.start();
 					}
+				Config.showDebug();
 		return this;
 	}
 	
@@ -91,6 +94,7 @@ public class Crawl
 	private int page = 0;
 	private void crawling(String url,ExcelWrite writer)
 	{
+		Config.hideDebug();
 		if (this.visitedLinks.contains(url))
 			return;
 		if(writer != null)
@@ -103,8 +107,8 @@ public class Crawl
 		Scraper currentScraper = Scraper.source(url);
 		System.out.println("\nThis is the current url "+url);
 		this.scrapers.add(currentScraper);
-		System.out.println("\nNumber of created scrappers ="+this.scrapers.size());
-		System.out.println("\nNumber of visited links ="+this.visitedLinks.size());
+		//System.out.println("\nNumber of created scrappers ="+this.scrapers.size());
+		//System.out.println("\nNumber of visited links ="+this.visitedLinks.size());
 		if(this.download)
 		{
 			if(this.mediaFilterKeys != null)				
@@ -118,6 +122,7 @@ public class Crawl
 				String link = internalLinksIterator.next();
 				crawling(link,writer);
 			}		
+		Config.hideDebug();
 	}
 	public Set<String> getEmails() 
 	{

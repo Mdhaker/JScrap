@@ -33,7 +33,8 @@ public class Rinterface {
 		if(!url.isEmpty())
 		{
 		this.scrapper = Scraper.source(url);
-		if(!this.scrapper.isJsoupLoaded())
+		if(!this.scrapper.isHeadlessBrowser())
+		{
 			try
 			{
 				this.initSelniuemLoader();
@@ -42,9 +43,10 @@ public class Rinterface {
 		catch(Exception e)
 			{
 				//System.out.println(e.getMessage());
-				System.out.println("Selniuem not working, this is the driver path "+Config.SELENIUM_CHROME_DRIVER_PATH);
+				System.out.println("Chrome Driver not working, this is the driver path "+Config.SELENIUM_CHROME_DRIVER_PATH);
 				//this.initUnitLoader();
 			}	
+		}
 		}
 	}
 	public Rinterface()
@@ -118,6 +120,7 @@ public class Rinterface {
 	
 	public String[] getSearchKeyResult(String key)
 	{
+		
 		if(!Config.Debug)
 		{
 			Config.hideDebug();
@@ -179,10 +182,8 @@ public class Rinterface {
 	 */
 	public void downloadImages(String path)
 	{
-		if(!Config.Debug)
-		{
-			Config.hideDebug();
-		}
+		Config.hideDebug();
+		
 		Download.mkdir(path);
 		Scraper scraper = Scraper.source(this.url);
 		for(String image :scraper.getMedias().get("image"))

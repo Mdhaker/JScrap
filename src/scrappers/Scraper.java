@@ -49,7 +49,7 @@ public class Scraper {
 	private String[] mediaFilterKeys;
 	private Loader loader ;
 	private int currentPage;
-	private boolean jsoup;
+	private boolean headlessBrowser;
 	
 	private Scraper()
 	{
@@ -78,7 +78,7 @@ public class Scraper {
 		}
 		try 
 		{
-			instance.jsoup = true ;
+			instance.headlessBrowser = true ;
 			baseURL = "http://"+url.split("://")[1].split("/")[0];
 			htmlpage = Jsoup.connect(url).get();
 			if(!htmlpage.select("iframe").isEmpty())
@@ -92,9 +92,8 @@ public class Scraper {
 		}
 		catch (Exception e) 
 		{	
-			System.out.println(e.getMessage());
-			instance.jsoup = false ;
-		return instance ;
+			//System.out.println(e.getMessage());
+		return Scraper.source(Loader.getHtmlUnitLoader(url)) ;
 		}
 	}
 	/**
@@ -107,7 +106,17 @@ public class Scraper {
 		instance = new Scraper();
 		baseURL = "http://"+load.getUrl().split("://")[1].split("/")[0];
 		instance.loader = load ;
-		htmlpage = Jsoup.parse(load.getHtmlContent()) ;
+		
+		try
+		{
+			htmlpage = Jsoup.parse(load.getHtmlContent()) ;
+			instance.headlessBrowser = true ;
+		}
+		catch(Exception e)
+		{
+			System.out.println("HTML unit error");
+		instance.headlessBrowser = false ;
+		}
 		return instance;
 	}
 	
@@ -508,9 +517,9 @@ public class Scraper {
 		return this.loader;
 	}
 	
-	public boolean isJsoupLoaded()
+	public boolean isHeadlessBrowser()
 	{
-		return this.jsoup;
+		return this.headlessBrowser;
 	}
 	
 	/**
