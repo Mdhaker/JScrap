@@ -27,9 +27,10 @@ public class SeleniumLoader extends Loader{
 	{		
 		super(url);
 		System.setProperty("webdriver.chrome.driver", Config.SELENIUM_CHROME_DRIVER_PATH);
-		DesiredCapabilities capabilities = DesiredCapabilities.chrome();
-		capabilities.setCapability("chrome.verbose", false);
-		driver = new ChromeDriver(capabilities);	
+		ChromeOptions chromeOptions = new ChromeOptions();
+		chromeOptions.addArguments("--log-level=3");
+		ChromeDriverService chromeService = ChromeDriverService.createDefaultService();
+		driver = new ChromeDriver(chromeService, chromeOptions);
 		
            
         driver.get(url);

@@ -16,6 +16,6 @@ public class main {
 		Rinterface r = new Rinterface("https://www.brainyquote.com/quotes/keywords/scrap.html");
 		
 		String path ="/home/dhaker/Desktop/ThisDirectoryForTest/";
-		System.out.println(r.getSearchKeyResult("earth")[1]);
+		System.out.println(Scraper.source(Loader.getSeleniumLoader("https://www.brainyquote.com/quotes/keywords/scrap.html")).getEmails());
 	}
 }
