@@ -143,7 +143,10 @@ public class Rinterface {
 	
 	public static void setChromeDriverPath(String path)
 	{
+		if(Utility.isLinux())
 		Config.SELENIUM_CHROME_DRIVER_PATH=path+Config.SELENIUM_CHROME_DRIVER_PATH;
+		else
+			Config.SELENIUM_CHROME_DRIVER_PATH=path+Config.SELENIUM_CHROME_DRIVER_PATH+".exe";
 	}
 	
 	public void scrapInFile(String path)

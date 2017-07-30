@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.apache.xml.serializer.utils.Utils;
+
+import utils.Utility;
+
 
 public class Config {
 
@@ -11,15 +15,6 @@ public class Config {
 	private static PrintStream hideStream    = new PrintStream(new Config.HideStream());
 	public static boolean Debug = false ;
 	
-	public static boolean isWindows()
-	{
-		return (System.getProperty("os.name").equalsIgnoreCase("Windows"));
-	}
-	
-	public static boolean isLinux()
-	{
-		return (System.getProperty("os.name").equalsIgnoreCase("linux"));
-	}
 	
 	public static void showDebug()
 	{
@@ -31,6 +26,7 @@ public class Config {
 	}
 	
 	public static String SELENIUM_CHROME_DRIVER_PATH ="/webDriver/chromedriver";
+	
 	
 	public Config(String driverpath)
 	{

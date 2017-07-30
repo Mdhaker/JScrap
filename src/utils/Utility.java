@@ -13,4 +13,13 @@ public class Utility {
 			
 		}
 	}
+	public static boolean isWindows()
+	{
+		return (System.getProperty("os.name").equalsIgnoreCase("Windows"));
+	}
+	
+	public static boolean isLinux()
+	{
+		return (System.getProperty("os.name").equalsIgnoreCase("linux"));
+	}
 }
